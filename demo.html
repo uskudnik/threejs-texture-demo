@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>demo</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <style>
+            #container {
+                width: 700px;
+                height: 700px;
+                outline: 2px solid red;
+                position: relative;
+                top:50px;
+                left:100px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id='container'></div>
+
+        <script src="three.js/build/three.js"></script><!-- threejs -->
+        <script src="three.js/examples/js/loaders/MTLLoader.js"></script>
+
+        <script src="three.js/examples/js/loaders/OBJMTLLoader.js"></script> <!-- objloader -->
+
+        <script src="three.js/examples/js/Detector.js"></script><!-- detector -->
+        <script src="three.js/examples/js/libs/stats.min.js"></script>
+        <script src="jquery.min.js"></script><!-- jquery -->
+
+<script>
+var container, stats;
+
+var camera, scene, renderer;
+
+var CONTAINER_WIDTH = 700, CONTAINER_HEIGHT = 700;
+
+var windowHalfX = window.innerWidth / 2;
+var windowHalfY = window.innerHeight / 2;
+
+init();
+animate();
+
+function init() {
+    container = document.getElementById('container')
+
+    camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+
+    // scene
+
+    scene = new THREE.Scene();
+
+
+    var ambient = new THREE.AmbientLight( 0x101030 );
+    scene.add( ambient );
+
+    var directionalLight = new THREE.DirectionalLight( 0xffeedd );
+    directionalLight.position.set( 0, 0, 1 );
+    scene.add( directionalLight );
+
+
+    var manager = new THREE.LoadingManager();
+    manager.onProgress = function ( item, loaded, total ) {
+        console.log("on progress");
+        console.log( item, loaded, total );
+
+    };
+
+    var texture = new THREE.Texture();
+
+    var loader = new THREE.ImageLoader( manager );
+    loader.load( 'crate.gif', function ( image ) {
+        console.log('load image');
+        texture.image = image;
+        texture.needsUpdate = true;
+
+    } );
+
+    // model
+
+    // var loader = new THREE.OBJLoader( manager );
+    // original-material/demo/terminal_VII-4.obj
+    // loader.load( 'terminal_VII-4.obj', function ( object ) {
+    //     console.log('obj load');
+    //     object.traverse( function ( child ) {
+
+    //         if ( child instanceof THREE.Mesh ) {
+    //             console.log('child', child);
+    //             child.material.map = texture;
+    //             // child.material.wireframe = true;
+    //             child.geometry.buffersNeedUpdate;
+    //             child.geometry.uvsNeedUpdate;
+    //         }
+
+    //     } );
+
+    //     scene.add( object );
+
+    // } );
+
+    var loader = new THREE.OBJMTLLoader( manager );
+    loader.addEventListener( 'load', function ( event ) {
+
+        var object = event.content;
+        object.traverse( function ( child ) {
+
+            if ( child instanceof THREE.Mesh ) {
+                console.log('child', child);
+                child.material.map = texture;
+                // child.material.wireframe = true;
+                child.geometry.buffersNeedUpdate;
+                child.geometry.uvsNeedUpdate;
+            }
+
+        } );
+
+
+        scene.add( object );
+
+    });
+    loader.load( 'terminal_VII-4.obj', 'terminal_VII-4.mtl' );
+
+    renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.sortObjects = false;
+
+    renderer.setSize(CONTAINER_WIDTH, CONTAINER_HEIGHT);
+    container.appendChild( renderer.domElement );
+
+    stats = new Stats();
+    stats.domElement.style.position = 'absolute';
+    stats.domElement.style.top = '0px';
+    container.appendChild( stats.domElement );
+
+    camera.position.set(5, 1, 0).multiplyScalar(200);
+}
+
+function animate() {
+    requestAnimationFrame( animate );
+    render();
+    stats.update();
+}
+
+function render() {
+    camera.lookAt( scene.position );
+    renderer.render( scene, camera );
+
+}
+</script>
+    </body>
+</html>
